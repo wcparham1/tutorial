@@ -232,7 +232,7 @@ Synopsis:
 ```
 ~/lookup/showCnt commit|tree|blob
 ```
-reads from the standard input sha1 of the corresponding objects and 
+reads from the standard input sha1 (the 40 character string being echoed) of the corresponding objects and 
 prints the content of these objects. 
 
 ## Activity 3 - Investigate the maps
@@ -240,7 +240,7 @@ prints the content of these objects.
 We see the content of the copyright file above. Such files are often copied verbatim. Lets determine the first author who have created it (irrespective of a repository).
 WoC has created this relationship and stored in b2fa (Blob to First Author) map:
 ```
-[username@da0]~% echo a8fe822f075fa3d159a203adfa40c3f59d6dd999 |  ~/lookup/getValues b2a
+[username@da0]~% echo a8fe822f075fa3d159a203adfa40c3f59d6dd999 |  ~/lookup/getValues b2fa
 a8fe822f075fa3d159a203adfa40c3f59d6dd999;1072910122;Warner Losh <imp@ccf9f872-aa2e-dd11-9fc8-001c23d0bc1f>;00a8f599c25ded714d2a4da9e1bb30e2a335181c
 ```
 It turns out that it was created by commit 00a8f599c25ded714d2a4da9e1bb30e2a335181c done by what appears to be the same author on unix second 1072910122.
@@ -284,10 +284,11 @@ to identify all associated projects:
 [username@da0]~% echo a8fe822f075fa3d159a203adfa40c3f59d6dd999 |  \
 ~/lookup/getValues b2tac | cut -d\; -f4 | \
 ~/lookup/getValues -f c2p  
-ajburton_freebsd
-bu7cher_freebsd
-denghuancong_freebsd
-...
+121f970412fec7f9af0352a9b4ce8dca43bdb59e;Happy-Ferret_unix-history-repo
+121f970412fec7f9af0352a9b4ce8dca43bdb59e;broftkd_unix-history-repo
+121f970412fec7f9af0352a9b4ce8dca43bdb59e;descent_unix-history-repo
+121f970412fec7f9af0352a9b4ce8dca43bdb59e;ls-zhu_unix-history-repo
+121f970412fec7f9af0352a9b4ce8dca43bdb59e;plabrop_unix-history-repo
 ```
 In fact there are 1072 distinct repositories where this blob appears.
 
@@ -301,10 +302,17 @@ Warner Losh <imp@FreeBSD.org>;0000ce4417bd8d9a2d66a7a61393558d503f2805;000109ae9
 
 In addition to variable-length records (key;val1,;val2;...;valn), 
 the output can be produced as a flat table (key;val1\nkey;val2\n...\nkey;valn)
-using -f option:
+using -f option: 
 ```
 [username@da0]~% echo 'Warner Losh <imp@FreeBSD.org>' | ~/lookup/getValues -f a2c
-Warner Losh echo 'Warner Losh <imp@FreeBSD.org>' | ~/lookup/getValues -f a2c| head
+Warner Losh <imp@FreeBSD.org>;0000ce4417bd8d9a2d66a7a61393558d503f2805
+Warner Losh <imp@FreeBSD.org>;000109ae96e7132d90440c8fa12cb7df95a806c6
+Warner Losh <imp@FreeBSD.org>;0001246ed9e02765dfc9044a1804c3c614d25dde
+Warner Losh <imp@FreeBSD.org>;00014b72bf10ad43ca437daf388d33c4fea73df9
+Warner Losh <imp@FreeBSD.org>;000153916157b29a14b65fa3efeff4e3788e1b0e
+...
+
+[username@da0]~% echo 'Warner Losh <imp@FreeBSD.org>' | ~/lookup/getValues -f a2c | head
 Warner Losh <imp@FreeBSD.org>;0000ce4417bd8d9a2d66a7a61393558d503f2805
 Warner Losh <imp@FreeBSD.org>;000109ae96e7132d90440c8fa12cb7df95a806c6
 ...
@@ -369,7 +377,7 @@ For any key provided on standard input, a list of values is provided
 ~/lookup/getValues [-f] a2c|c2dat|b2ta|b2fa|c2b|b2f|c2f|p2c|c2p|c2P|P2c
 ```
 option -f replaces one output line per input line into the number of lines corresponding to the number of values. 
-(or single-value maps such as c2dat, b2fa) -f makes no sense as it prints distinct fields on separate lines)
+(or single-value maps such as c2dat, b2fa) -f makes no sense as it prints distinct fields on separate lines). This can be seen by using the command "echo a8fe822f075fa3d159a203adfa40c3f59d6dd999 | ~/lookup/getValues -f b2tac".
 
 Also, only the first column of the input is considered as the key, other fields are passed through, e.g., 
 ```
@@ -462,6 +470,9 @@ Now the same thing can be done using oscar.py:
 [username@da0:oscar.py]~% python3
 >>> from oscar import Author
 >>> Author('"Albert Krawczyk" <pro-logic@optusnet.com.au>').commit_shas
+(b'\x17\xab\xdb\xdc\x90\x19P\x16D*j\x8d\xd8\xe3\x8d\xea\x82R\x92\xae', b'\x9c\xdc\x91\x8b\xfb\xa1\x01\r\xe1]\x0c\x96\x8a\xf8\xee7\xc9\xc3\x00\xff', b'\xd9\xfch\ni\x19\x83\x00\xd3K\xc7\xe3\x1b\xba\xfe6\xe7\x18\\v')
+
+*Note: This has given us the binary representation of the commit_shas.  The hexadecimal representation can be seen below.
 ('17abdbdc90195016442a6a8dd8e38dea825292ae', '9cdc918bfba1010de15d0c968af8ee37c9c300ff', 'd9fc680a69198300d34bc7e31bbafe36e7185c76')
 ```
 
@@ -585,7 +596,7 @@ Find all blobs associated with Julia language files (extension .jl)
 Hint 1: What is the name of the map?
 
 ```
-[username@da0] zcat /da0_data/basemaps/gz/f2bFullP*.s | grep '\.jl;'
+[username@da0] zcat /da0_data/basemaps/gz/f2bFullT*.s | grep '\.jl;'
 ```
 
 ## Activity 6: Investigating Technical dependencies
@@ -596,7 +607,7 @@ several different languages: and are located in
 to 127 based on the 7 bits in the first byte of the commit sha1. 
 
 
-The format of each file is endoded in its name: 
+The format of each file is encoded in its name: 
 ```
 commit;deforked repo;timestamp;Aliased author;blob;filename;language (as used in WoC);module1;module2;...`  
 
@@ -627,9 +638,9 @@ addr2line in the above two blobs.
 
 Lets get a list of commits and repositories that imported Tensorflow for .py files:  
 ```
-[username@da0]~%zcat c2PtAbflPkgFullU76.s |grep tensorflow|head -2
-000005efe300482514d70d44c5fa922b34ff79a5;Rayhane-mamah_Tacotron-2;1557284915;qq443452099 <47710489+qq443452099@users.noreply.github.com>;05604b3f0632e98cc0eee3afef589dc5031f3a43;tacotron/synthesizer.py;PY;tacotron.utils.text.text_to_sequence;tacotron.utils.plot;tacotron.models.create_model;wave;datasets.audio;os;librosa.effects;tensorflow;infolog.log;datetime.datetime;io;numpy
-000005efe300482514d70d44c5fa922b34ff79a5;Rayhane-mamah_Tacotron-2;1557284915;qq443452099 <47710489+qq443452099@users.noreply.github.com>;49bc3b8b6533b93941223ccbeb401e47e5a573d7;hparams.py;PY;tensorflow;numpy
+[username@da0]~% zcat /da?_data/basemaps/gz/c2PtAbflPkgFullU76.s -f | grep tensorflow | head -2
+4c0005ce2c6b1d235e812c16d4299220e8f36aba;udacity_machine-learning;1495458904;vadim <vadim@Vadzims-MacBook-Pro.local>;71813087e2d49a93978a1ead815e3586ce03241a;projects/image-classification/image_classification.ipynb;ipy;helper;pickle;random;numpy;tqdm.tqdm;urllib.request.urlretrieve;problem_unittests;os.path.isfile;tensorflow;tarfile
+4c00079c571f860923a056e9678655f295a89cfc;dilawarm_federated;1614854007;Pernille Kopperud <pernilko@stud.ntnu.no>;e3271413e4e8f37c7a07f263d74c1f102c2312c3;federated/optimization/mitbih_federated.py;PY;federated.utils.data_utils.get_validation_fn;federated.data.mitbih_data_preprocessing.get_datasets;federated.utils.training_loops.federated_training_loop;inspect;federated.utils.compression_utils;federated.data.mitbih_data_preprocessing;os;functools;federated.utils.differential_privacy;federated.models.mitbih_model;federated.utils.rfa.create_rfa_averaging;tensorflow_federated;tensorflow
 ```
 
 ### Exercise 6
